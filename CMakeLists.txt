@@ -17,6 +17,12 @@ check_option(${ASN1C_EXEC} -no-gen-JER ASN1C_EXEC)
 check_option(${ASN1C_EXEC} -no-gen-BER ASN1C_EXEC)
 check_option(${ASN1C_EXEC} -no-gen-OER ASN1C_EXEC)
 
+set(ADDRESS_SANITIZER OFF CACHE STRING "compile with address sanitizer")
+set_property(CACHE ADDRESS_SANITIZER PROPERTY TYPE BOOL)
+if (ADDRESS_SANITIZER)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-common")
+endif ()
+
 add_subdirectory(asn1c)
 
 add_executable(rrc-reconfig rrc-reconfig.c)
