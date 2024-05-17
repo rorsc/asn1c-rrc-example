@@ -8,18 +8,20 @@ printing a sample message, namely an RRC reconfiguration of 3GPP 38.331 Rel
 
 It orients on OAI tag `2024.w18` (`82bd07ebd54b77fab793d5db1d3926f7144e91d2`).
 
-## Build
+## Prerequisites
 
 This repository uses cmake to build the code. It assumes that you have asn1c
 already installed. If not, install it from
-[here](https://github.com/mouse07410/asn1c). Then, proceed building and run the
-example.
+[here](https://github.com/mouse07410/asn1c).
+
+## Build
+
+In order to build the project, run the following commands:
 
 ```bash
 mkdir build
 cmake . -GNinja -DCMAKE_BUILD_TYPE=Debug -DADDRESS_SANITIZER=ON -Bbuild
 ninja -C build
-./build/rrc-reconfig
 ```
 
 ## asn1c compilation explanation
