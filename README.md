@@ -25,8 +25,8 @@ ninja -C build
 ## asn1c compilation explanation
 
 OAI creates the ASN.1 source files during compilation time. The root-level
-checks that `asn1c` is present, and that it supports the options used to
-generate ASN.1 sources.
+`CMakeLists.txt` checks that `asn1c` is present, and that it supports the
+options used to generate ASN.1 sources.
 
 All ASN.1 target-related cmake code is in `asn1c/CMakeLists.txt`. First, it
 sets the required ASN.1 grammar version to support the selection of different
@@ -75,16 +75,49 @@ that the used grammar is the full 3GPP 5G NR RRC spec instead of a simple sample
 grammar.
 
 Specifically, the example uses a pre-defined encoded RRC message to illustrate
-the usage of `asn1c`. Pay attention to
-- decoding of messages with `uper_decode()`, providing the type of message,
-- printing of message in XML format using `xer_fprint()`, again providing the
+the usage of `asn1c`. The encoded RRC message was taken from the RAN by running
+the gNB and connecting a UE. Specifically, I added a patch (valid as of
+commit `82bd07ebd54b77fab793d5db1d3926f7144e91d2`, might be different for other
+versions) that prints the encoded RRC reconfiguration message:
+
+```patch
+diff --git a/openair2/RRC/NR/rrc_gNB.c b/openair2/RRC/NR/rrc_gNB.c
+index 1e6915624b..062be78c91 100644
+--- a/openair2/RRC/NR/rrc_gNB.c
++++ b/openair2/RRC/NR/rrc_gNB.c
+@@ -563,6 +563,11 @@ void rrc_gNB_generate_dedicatedRRCReconfiguration(const protocol_ctxt_t *const c
+         ctxt_pP->module_id,
+         DCCH);
+
++  printf("reconfiguration bytes:\n");
++  for (int i = 0 ; i < size; ++i)
++    printf("0x%02x, ", buffer[i]);
++  printf("\n");
++
+   nr_rrc_transfer_protected_rrc_message(rrc, ue_p, DCCH, buffer, size);
+ }
+  
+```
+
+The resulting bytes were copy-pasted into `rrc-reconfig.c`. From here, I then
+used the asn1c API to do all operations; the example has explanatory comments.
+You should pay attention to how to
+
+- decode a message with `uper_decode()`, providing the type of message,
+- print a message in XML format using `xer_fprint()`, again providing the
   type of the message to be printed,
-- how to access specific fields and read values,
-- encoding of messages using the two `asn1c` encoding functions
+- access specific fields and read values,
+- encode a message using the two `asn1c` encoding functions
   `uper_encode_to_buffer()` (encode to existing buffer) and
   `uper_encode_to_new_buffer()` (encode to buffer that `asn1c` allocates on the
   heap for the user), and
 - how to properly free allocated memory.
 
-The project comes with an option for the address sanitizer so that memory leaks
-can be identified.
+For instance, in an O-RAN architecture with near-RT RIC and gNB, an xApp might
+request to be informed about RRC Reconfiguration messages sent to UEs. In that
+case, the gNB would send indication messages with the encoded stream of bytes;
+the xApp will have the bytes as in `rrc-reconfig.c`, variable `buf`, and can
+then decode and inspect the message.
+
+Regarding the allocation of memory, the project comes with an option for the
+address sanitizer so that memory leaks can be identified.
