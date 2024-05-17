@@ -76,6 +76,8 @@ start guide](http://lionet.info/asn1c/documentation.html), with the difference
 that the used grammar is the full 3GPP 5G NR RRC spec instead of a simple sample
 grammar.
 
+### RRC Reconfiguration message in OAI
+
 Specifically, the example uses a pre-defined encoded RRC message to illustrate
 the usage of `asn1c`. The encoded RRC message was taken from the RAN by running
 the gNB and connecting a UE. Specifically, I added a patch (valid as of
@@ -101,9 +103,16 @@ index 1e6915624b..062be78c91 100644
   
 ```
 
-The resulting bytes were copy-pasted into `rrc-reconfig.c`. From here, I then
-used the asn1c API to do all operations; the example has explanatory comments.
-You should pay attention to how to
+The resulting bytes were copy-pasted into `rrc-reconfig.c`.
+
+### RRC Reconfiguration example and steps
+
+Use the following command to run the executable:
+```bash
+./build/rrc-reconfig
+```
+
+Using asn1c API, the example shows how to:
 
 - decode a message with `uper_decode()`, providing the type of message,
 - print a message in XML format using `xer_fprint()`, again providing the
@@ -113,7 +122,9 @@ You should pay attention to how to
   `uper_encode_to_buffer()` (encode to existing buffer) and
   `uper_encode_to_new_buffer()` (encode to buffer that `asn1c` allocates on the
   heap for the user), and
-- how to properly free allocated memory.
+- properly free allocated memory.
+
+The source file (`rrc-reconfig.c`) contains all the above explanations as well.
 
 For instance, in an O-RAN architecture with near-RT RIC and gNB, an xApp might
 request to be informed about RRC Reconfiguration messages sent to UEs. In that
