@@ -78,7 +78,34 @@ int main()
   assert(dec_rval.code == RC_OK);
   xer_fprint(stdout, &asn_DEF_NR_CellGroupConfig, cellGroupConfig);
 
-  // TODO re-encode CellGroupConfig
-  // TODO re-encode reconfiguration
-  // TODO compare is the same as before
+  // we can also encode a message
+  uint8_t cg_buf[2048];
+  asn_enc_rval_t enc_rval = uper_encode_to_buffer(
+      &asn_DEF_NR_CellGroupConfig, NULL, cellGroupConfig, cg_buf, sizeof(cg_buf));
+  assert(enc_rval.encoded > 0);
+  // Note!! uper_encode_to_buffer gives us the number of encoded BITS. We have
+  // to round to bytes
+  size_t cg_buf_size = (enc_rval.encoded + 7) / 8; // round up to full byte
+  // compare this is equal to what we decoded from
+  assert(cg_buf_size == binary_cellGroupConfig->size);
+  for (int i = 0; i < binary_cellGroupConfig->size; ++i) {
+    assert(cg_buf[i] == binary_cellGroupConfig->buf[i]);
+  }
+
+  // re-encode reconfiguration, with a function that allocates the buffer
+  uint8_t *reconf_buf = NULL;
+  size_t buf_size = uper_encode_to_new_buffer(&asn_DEF_NR_DL_DCCH_Message, NULL, msg, (void **) &reconf_buf);
+  // compare is the same as before. Unlike uper_encode_to_buffer(),
+  // uper_encode_to_new_buffer() returns the size in bytes
+  assert(buf_size == sizeof(buf));
+  for (int i = 0; i < buf_size; ++i) {
+    assert(reconf_buf[i] == buf[i]);
+  }
+
+  // we have to free memory of allocated objects
+  free(reconf_buf);
+  ASN_STRUCT_FREE(asn_DEF_NR_DL_DCCH_Message, msg);
+  ASN_STRUCT_FREE(asn_DEF_NR_CellGroupConfig, cellGroupConfig);
+
+  return 0;
 }
